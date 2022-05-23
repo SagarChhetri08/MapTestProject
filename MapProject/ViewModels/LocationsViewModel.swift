@@ -16,20 +16,33 @@ class LocationsViewModel : ObservableObject {
     @Published var mapRegion = MKCoordinateRegion()
     let defaultLocation = Location(typeID: 0, departureTime: "2021-07-03T14:30:00.000Z", name: "Flinders", latitude: -37.8181755, longitude: 144.9661256, isExpress: true, route: nil, hasMyKiTopUp: nil)
     
-    init(){
-        guard let assets = NSDataAsset(name: "LocationsJsonData") else {
-              print("Missing data asset: LocationsJsonData")
-            return
+    let service: ServiceProtocol
+    init(service: ServiceProtocol = APIService()) {
+        self.service = service
+        self.loadData()
+    }
+    
+    func loadData() {
+        service.fetchLocationDatas { locations in
+            guard let datas = locations else {return}
+            self.locations = datas
+            self.filteredLocations = datas
+            self.updateMapRegion(location: datas.locations.first ?? self.defaultLocation)
+            
         }
-        
-        let locations = try! JSONDecoder().decode(LocationData.self, from: assets.data)
-        self.locations = locations
-        self.filteredLocations = locations
-        
- 
-        self.updateMapRegion(location: locations.locations.first ?? defaultLocation)
 
     }
+//    private func loadData(){
+//        guard let assets = NSDataAsset(name: "LocationsJsonData") else {
+//              print("Missing data asset: LocationsJsonData")
+//            return
+//        }
+//
+//        let locations = try! JSONDecoder().decode(LocationData.self, from: assets.data)
+//        self.locations = locations
+//        self.filteredLocations = locations
+//        self.updateMapRegion(location: locations.locations.first ?? defaultLocation)
+//    }
     private func updateMapRegion(location : Location){
         self.mapRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude), span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1))
     }
@@ -52,7 +65,7 @@ class LocationsViewModel : ObservableObject {
     
     func showAllData(){
         if let data = locations {
-            self.filteredLocations = locations
+            self.filteredLocations = data
         }
     }
     
@@ -70,6 +83,7 @@ class LocationsViewModel : ObservableObject {
                 }else{
                     transportdata = data.locations.filter{ $0.typeID == 1  }
                 }
+                self.filteredLocations?.locations =   transportdata
             case .express:
               
                 if isTrue{
@@ -77,6 +91,7 @@ class LocationsViewModel : ObservableObject {
                 }else{
                     expressdata = data.locations.filter{ $0.isExpress == false }
                 }
+                self.filteredLocations?.locations =  expressdata
      
             case .topup:
             
@@ -85,8 +100,9 @@ class LocationsViewModel : ObservableObject {
                 }else{
                      mykidata = data.locations.filter{ $0.hasMyKiTopUp == false }
                 }
+                self.filteredLocations?.locations =  mykidata
             }
-            self.filteredLocations?.locations =  expressdata + transportdata + mykidata
+            
         }
 
     }
