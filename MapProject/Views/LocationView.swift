@@ -14,184 +14,200 @@ struct LocationView: View {
     @StateObject private var vm = LocationsViewModel()
     @State var showFilter = true
     @State var showAll = true
-    @State var isTrain:Bool? = nil
-    @State var isTram:Bool? = nil
-    @State var isExpress:Bool? = nil
-    @State var isMyKi:Bool? = nil
-    
-    
+    @State var isTrain:Bool = false
+    @State var isTram:Bool = false
+    @State var isNormal:Bool = false
+    @State var isExpress:Bool = false
+    @State var isMyKi:Bool = false
+    @State var isNotMyKi:Bool = false
 
-    
-    @State private var mapRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: -37.8181755, longitude: 144.9661256), span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1))
-    
     
     var body: some View {
-        ZStack{
-            
-            if let data = locationData {
-               
-                Map(coordinateRegion: $vm.mapRegion, annotationItems: data.locations) { location in
-                    MapAnnotation(coordinate:CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)) {
-                        
-                        let transportType = (location.typeID == 0) ? "Train" : "Tram"
-             
-                        PlaceAnnotationView( title: location.name + " "+"( \(transportType) )", datetime: vm.convertStingDate(dateString: location.departureTime))
-                    }
-                }
-                
-                VStack{
-                    VStack{
-                        HStack{
-                            Spacer()
-                            Text("All")
-                                .contextMenu {
-                                    Button {
-                                        showAll = true
-                                        isTrain = false
-                                        isExpress = false
-                                        isMyKi = false
-                                        print("All ")
-                                        vm.showAllData()
-                                    } label: {
-                                        Label("Show All ", systemImage: (showAll == true ) ? "checkmark.circle" : "circle")
-                                    }
-                                  
-                                }
-                                .padding(.all , 6)
-                                .foregroundColor(.white)
-                                .background(Color.blue)
-                                .cornerRadius(4)
-                            
-                            Text("Filter By ").contextMenu{
+        NavigationView{
+            GeometryReader{ geo in
+                ZStack{
+                    
+                    if let data = locationData {
+                       
+                        Map(coordinateRegion: $vm.mapRegion, annotationItems: data.locations) { location in
+                            MapAnnotation(coordinate:CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)) {
                                 
-                                Text("Transport Type")
-                                    .contextMenu {
-                               
-                        
-                                        Button {
-                                            isTrain = true
-                                            showAll = false
-                                            isExpress = nil
-                                            isMyKi = nil
-                                            vm.filterLocations(filter: .transport, isTrue: isTrain!)
-                                        } label: {
-                                            Label("Train Only ", systemImage: (isTrain == true ) ? "checkmark.circle" : "circle")
-                                        }
-                                        Button {
-                                            
-                                            isTrain = false
-                                            showAll = false
-                                            isExpress = nil
-                                            isMyKi = nil
-                                            print("Chose tram")
-                                            vm.filterLocations(filter: .transport, isTrue: isTrain!)
-                                        } label: {
-                                            Label("Tram Only ", systemImage: (isTrain == false ) ? "checkmark.circle" : "circle")
-                                        }
-                                
-                                      
-                                    }
-                                    .padding(.all , 6)
-                                    .foregroundColor(.white)
-                                    .background(Color.blue)
-                                    .cornerRadius(4)
-                                //My ki filter
-                                Text("MyKi TopUp")
-                                    .contextMenu {
-                        
-                                        Button {
-                                            isMyKi = true
-                                            showAll = false
-                                            isExpress = nil
-                                            isTrain = nil
-                                           
-                                            vm.filterLocations(filter: .topup, isTrue: isMyKi!)
-                                        } label: {
-                                            Label("Yes ", systemImage: (isMyKi == true ) ? "checkmark.circle" : "circle")
-                                        }
-                                        Button {
-                                            isMyKi = false
-                                            showAll = false
-                                            isExpress = nil
-                                            isTrain = nil
-                                            vm.filterLocations(filter: .topup, isTrue: isMyKi!)
-                                        } label: {
-                                            Label("No ", systemImage: (isMyKi == false ) ? "checkmark.circle" : "circle")
-                                        }
-                                
-                                      
-                                    }
-                                    .padding(.all , 6)
-                                    .foregroundColor(.white)
-                                    .background(Color.blue)
-                                    .cornerRadius(4)
-                                
-                                
-                                //Is exprees filter
-                                
-                                Text("Is Express")
-                                    .contextMenu {
-                 
-                                
-                                        Button {
-                                            isExpress = true
-                                            showAll = false
-                                            isMyKi = nil
-                                            isTrain = nil
-                                            print("Change express")
-                                            vm.filterLocations(filter: .express, isTrue: isExpress!)
-                                            
-                                        } label: {
-                                            Label("Is Express", systemImage: (isExpress == true ) ? "checkmark.circle" : "circle")
-                                        }
-                                        Button {
-                                            isExpress = false
-                                            showAll = false
-                                            isMyKi = nil
-                                            isTrain = nil
-                                            print("Change express")
-                                            vm.filterLocations(filter: .express, isTrue: isExpress!)
-                                            
-                                        } label: {
-                                            Label("Is Normal", systemImage: (isExpress == false ) ? "checkmark.circle" : "circle")
-                                        }
-
-                        
-                                    }
-                                    .padding(.all , 6)
-                                    .foregroundColor(.white)
-                                    .background(Color.blue)
-                                    .cornerRadius(4)
+                                let transportType = (location.typeID == 0) ? "Train" : "Tram"
+                     
+                                PlaceAnnotationView( title: location.name + " "+"( \(transportType) )", datetime: vm.convertStingDate(dateString: location.departureTime))
                             }
-                            .padding(.all , 6)
-                                .foregroundColor(.white)
-                                .background(Color.blue)
-                                .cornerRadius(4)
-                            
-
-             
+                        }
+                        
+                    }else {
+                        VStack{
+                            Spacer()
+                            HStack{
+                                Spacer()
+                                ProgressView("Please wait...")
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                Spacer()
+                                
+                            }
+    
+                            Spacer()
                         }.padding()
+                        
          
-            
                     }
-                    Spacer()
+
+         
                 }
-            }else {
-                Text("No data for map to show ")
+                .onChange(of: vm.filteredLocations, perform: { newValue in
+                    locationData = vm.filteredLocations
+                })
+                .onAppear {
+                    locationData = vm.filteredLocations
+                }
+
+                
             }
+            .ignoresSafeArea(.all, edges: .bottom)
+            .navigationTitle("Map View")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                  ToolbarItemGroup(placement: .navigationBarTrailing) {
+                      
+                      Menu {
+                          Button {
+                              showAll = true
+                               isTrain = false
+                               isTram = false
+                               isNormal = false
+                               isExpress = false
+                               isMyKi = false
+                              isNotMyKi = false
+                              
+                              if showAll{
+                                  vm.showAllData()
+                              }
+                            
+                          } label: {
+                              Label("All ", systemImage: (showAll == true ) ? "checkmark.circle" : "circle")
+                          }
+                          Button {
+                              isTrain.toggle()
+                               showAll = false
+                               isTram = false
+                               isNormal = false
+                               isExpress = false
+                               isMyKi = false
+                              isNotMyKi = false
+                              if isTrain{
+                                  vm.filterLocations(filter: .transport, isTrue: true)
+                              }else{
+                                  showAll = true
+                                  vm.showAllData()
+                              }
+                          } label: {
+                              Label("Trains Only", systemImage: (isTrain == true ) ? "checkmark.circle" : "circle")
+                          }
+                          Button {
+                              isTram.toggle()
+                               isTrain = false
+                               showAll = false
+                               isNormal = false
+                               isExpress = false
+                               isMyKi = false
+                              isNotMyKi = false
+                              if isTram{
+                                  vm.filterLocations(filter: .transport, isTrue: false)
+                              }else{
+                                  showAll = true
+                                  vm.showAllData()
+                              }
+                          } label: {
+                              Label("Trams Only", systemImage: (isTram == true ) ? "checkmark.circle" : "circle")
+                          }
+                          Button {
+                              isExpress.toggle()
+                               isTrain = false
+                               isTram = false
+                               isNormal = false
+                               showAll = false
+                               isMyKi = false
+                              isNotMyKi = false
+                              if isExpress{
+                                  vm.filterLocations(filter: .express, isTrue: true)
+                              }else{
+                                  showAll = true
+                                  vm.showAllData()
+                              }
+                          } label: {
+                              Label("Express", systemImage: (isExpress == true ) ? "checkmark.circle" : "circle")
+                          }
+                          Button {
+                              isNormal.toggle()
+                               isTrain = false
+                               isTram = false
+                               showAll = false
+                               isExpress = false
+                               isMyKi = false
+                              isNotMyKi = false
+                              if isNormal{
+                                  vm.filterLocations(filter: .express, isTrue: false)
+                              }else{
+                                  showAll = true
+                                  vm.showAllData()
+                              }
+                              
+                          } label: {
+                              Label("Normal", systemImage: (isNormal == true ) ? "checkmark.circle" : "circle")
+                          }
+                          Button {
+                              isMyKi.toggle()
+                               isTrain = false
+                               isTram = false
+                               isNormal = false
+                               isExpress = false
+                               showAll = false
+                              isNotMyKi = false
+                              if isMyKi{
+                                  vm.filterLocations(filter: .topup, isTrue: true)
+                              }else{
+                                  showAll = true
+                                  vm.showAllData()
+                              }
+                          } label: {
+                              Label(" Has MykiTopUp ", systemImage: (isMyKi == true ) ? "checkmark.circle" : "circle")
+                          }
+                          Button {
+                              isNotMyKi.toggle()
+                               isTrain = false
+                               isTram = false
+                               isNormal = false
+                               isExpress = false
+                               isMyKi = false
+                              showAll=false
+                              if isNotMyKi{
+                                  vm.filterLocations(filter: .topup, isTrue: false)
+                              }else{
+                                  showAll = true
+                                  vm.showAllData()
+                              }
+                          } label: {
+                              Label("Has Not Myki TopUp", systemImage: (isNotMyKi == true ) ? "checkmark.circle" : "circle")
+                          }
 
- 
+                      } label: {
+//                          Label("Menu", systemImage: "ellipsis.circle")
+                          Image("sort").resizable().frame(width: 30, height: 30)
+                          
+                      }
+                
+          
+
+                  }
+              }
         }
-        .onChange(of: vm.filteredLocations, perform: { newValue in
-            locationData = vm.filteredLocations
-        })
-        .onAppear {
-            locationData = vm.filteredLocations
 
-            
-        }
-
+       
         
+
     }
   
 }

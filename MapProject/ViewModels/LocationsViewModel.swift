@@ -32,17 +32,7 @@ class LocationsViewModel : ObservableObject {
         }
 
     }
-//    private func loadData(){
-//        guard let assets = NSDataAsset(name: "LocationsJsonData") else {
-//              print("Missing data asset: LocationsJsonData")
-//            return
-//        }
-//
-//        let locations = try! JSONDecoder().decode(LocationData.self, from: assets.data)
-//        self.locations = locations
-//        self.filteredLocations = locations
-//        self.updateMapRegion(location: locations.locations.first ?? defaultLocation)
-//    }
+
     private func updateMapRegion(location : Location){
         self.mapRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude), span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1))
     }

@@ -29,7 +29,6 @@ struct PlaceAnnotationView: View {
               .cornerRadius(10)
               .opacity(showTitle ? 0 : 1)
 
-        
         Image(systemName: "mappin.and.ellipse")
               .font(.largeTitle)
           .foregroundColor(.blue)
